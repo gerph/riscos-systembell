@@ -1,0 +1,89 @@
+/*******************************************************************
+ * File:        module
+ * Purpose:     SystemBell module interface
+ * Author:      Gerph
+ ******************************************************************/
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "kernel.h"
+#include "swis.h"
+#include "modhead.h"
+#include "riscos/Services.h"
+
+#ifdef DEBUG
+#define dprintf if (1) printf
+#else
+#define dprintf if (0) printf
+#endif
+
+
+
+int os_byte_read(int byte, int default_value)
+{
+    _kernel_oserror *err;
+    int value;
+    err = _swix(OS_Byte, _INR(0,2)|_OUT(1), byte, 0, 255, &value);
+    if (err)
+        return default_value;
+    dprintf("Byte %i => %i\n", byte, value);
+    return value;
+}
+
+
+_kernel_oserror *sound_controlpacked(uint32_t p1, uint32_t p2)
+{
+    _kernel_oserror *err;
+    err = _swix(Sound_ControlPacked, _INR(0,1), p1, p2);
+    return err;
+}
+
+
+/***************************************************************************
+ * Function:     Mod_Service
+ * Description:  Service call handler routine. All services which are being
+ *               received by the module will be passed to this routine.
+ * Parameters:   service = service call number
+ *               r       = pointer to register block on entry
+ *               pw      = private word for module
+ * On exit:      Update register values on return by updating r.
+ **************************************************************************/
+void Mod_Service(int service, _kernel_swi_regs *r, void *pw)
+{
+    if (service == Service_ExternalBell)
+    {
+        _kernel_oserror *err;
+        int32_t channel = os_byte_read(211, 1);
+        int32_t info = os_byte_read(212, 0x90);
+        int32_t freq = os_byte_read(213, 0x64);
+        int32_t dur = os_byte_read(214, 0x06);
+
+        uint32_t packed1;
+        uint32_t packed2;
+
+        packed1 = channel;      /* &000000CC */
+
+        /* In info, bit 2 is H and bit 0,1 is S */
+        packed1 |= (info & 3) << 8;
+        if (info & 4)
+            packed1 |= 0x1000;
+        /* packed 1 is now         &0000HSCC */
+
+        /* Volume is in the top 5 bits */
+        info = info << 24;
+        info = info >> (24+3); /* Sign extend */
+        info += 1;
+
+        packed1 |= (info<<16);  /* &VVVVHSCC */
+
+        packed2 = freq;         /* &000000PP */
+        packed2 |= (dur<<16);   /* &00DD00PP */
+
+        dprintf("Sound_ControlPacked: &%08x / &%08x\n", packed1, packed2);
+        err = sound_controlpacked(packed1, packed2);
+        if (!err)
+            r->r[1] = Service_Serviced;
+    }
+}
