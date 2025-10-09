@@ -38,7 +38,7 @@ help-string: SystemBell Module_MajorVersion_CMHG
 ; module is going to be distributed.
 ; SWI chunks &0- &3FFC0 are for operating system use.
 ; &40000- &7FFC0 are for operating system exetensions.
-; &80000- &BFFC0 are for third party applications.
+; &80000- &BFFC0 are for third-party applications.
 ; &C0000- &FFFC0 are for user applications.
 ; Bit 17 will always be clear on the SWI chunk number.
 ; Consult PRM 1-26 for more details.
@@ -181,10 +181,10 @@ help-string: SystemBell Module_MajorVersion_CMHG
 ;     the text supplied in the 'help-text' field.
 ;   configure:
 ;     The command is used for *Status and *Configure commands only. This is
-;     equivilent to the 'status' field.
+;     equivalent to the 'status' field.
 ;   status:
 ;     The command is used for *Status and *Configure commands only. This is
-;     equivilent to the 'configure' field.
+;     equivalent to the 'configure' field.
 ;   help:
 ;     The command handler will be called to process help requests.
 ;   invalid-syntax: <string>
