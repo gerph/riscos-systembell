@@ -5,7 +5,7 @@
 #
 # Program specific options:
 #
-COMPONENT  = SystemBell
+COMPONENT  = SystemBell2
 
 # Specifies additional targets for startup
 INITTARGET = inittarget
