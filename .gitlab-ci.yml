@@ -20,7 +20,7 @@ riscos:
   stage: build
   script:
     # Fetch the build client
-    - curl -s -L -o riscos-build-online https://github.com/gerph/robuild-client/releases/download/v0.05/riscos-build-online && chmod +x riscos-build-online
+    - curl -s -L -o riscos-build-online https://github.com/gerph/robuild-client/releases/download/v0.07/riscos-build-online && chmod +x riscos-build-online
 
     # Zip up the source to send to robuild
     - zip -q9r /tmp/source-archive.zip * .robuild.yaml
@@ -37,7 +37,7 @@ riscos:
       fi
       echo "This is version: $version"
       if [ -f /tmp/built,a91 ] ; then
-          cp /tmp/built,a91 "SystemBell-$version.zip"
+          cp /tmp/built,a91 "SystemBell2-$version.zip"
       else
           echo "No archive was built?"
           exit 1
@@ -46,7 +46,7 @@ riscos:
   artifacts:
     when: always
     paths:
-      - "SystemBell-*.zip"
+      - "SystemBell2-*.zip"
 
   tags:
     - linux

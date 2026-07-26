@@ -5,3 +5,6 @@ oz64/*
 rm/*
 rm32/*
 rm64/*
+.rotransform
+aof/*
+aof32/*

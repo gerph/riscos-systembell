@@ -1,7 +1,7 @@
 %YAML 1.0
 ---
 
-# Example .robuild.yml file
+# RISC OS build file to execute on https://build.riscos.online/
 
 # Source is optional (NYI), and should be a URL to source the content from
 #source: <url>
@@ -16,13 +16,73 @@ jobs:
       "Sys$Environment": ROBuild
       "BUILD32": 1
 
+      # Faster building using the host toolchain
+      "Alias$AMU": "HostAMU %*0"
+
     # Directory to change to before running script
     #dir: <working directory>
 
     # Commands which should be executed to perform the build.
     # The build will terminate if any command returns a non-0 return code or an error.
     script:
-      - amu -f Makefile ram  
+
+      # Export our headers and libraries
+      - echo
+      - echo *** Export the headers or libs ***
+      - amu -f Makefile export
+
+      # Build modules (RAM)
+      - echo
+      - echo *** Build the RAM module (32-bit) ***
+      - amu -f Makefile ram
+
+      - echo
+      - echo *** Build the RAM module (26-bit) ***
+      - amu -f Makefile ram BUILD26=1 BUILD32=
+
+      # Build modules for ROM
+      - echo
+      - echo *** Build the ROM module (32-bit) ***
+      - amu -f Makefile rom
+
+      - echo
+      - echo *** Build the ROM module (26-bit) ***
+      - amu -f Makefile rom BUILD26=1 BUILD32=
+
+      # Tests - loading to check that it starts up
+      - echo
+      - echo *** Load the module ***
+      - RMLoad rm32.SystemBell2
+
+      # Insert any testing here...
+      #- echo
+      #- echo *** Test that the module works ***
+      #- /TestModule
+
+      - echo
+      - echo *** Kill the module ***
+      - RMKill SystemBell
+
+      # Construct the artifacts to release
+      - echo *** Copy artifacts ***
+      - cdir Artifacts
+      - copy rm32 Artifacts.* ~CVR
+      - copy rm Artifacts.* ~CVR
+      - copy aof32 Artifacts.* ~CVR
+      - copy aof Artifacts.* ~CVR
+      - IfThere <Exports$Dir>.C.h.SystemBell2 Then cdir Artifacts.Lib
+      - IfThere <Exports$Dir>.C.h.SystemBell2 Then cdir Artifacts.Lib.h
+      - IfThere <Exports$Dir>.C.h.SystemBell2 Then copy <Exports$Dir>.C.h.SystemBell2 Artifacts.Lib.h.SystemBell2 ~CV
+      - IfThere <Exports$Dir>.Lib.SystemBell2 Then cdir Artifacts.Lib
+      - IfThere <Exports$Dir>.Lib.SystemBell2 Then copy <Exports$Dir>.Lib.SystemBell2 Artifacts.Lib.SystemBell2 ~CVR
+      # Remove the directory if it was empty
+      - X remove <Exports$Dir>.Lib.SystemBell2
+      - X remove <Exports$Dir>.Lib
+      - IfThere LICENSE Then copy LICENSE Artifacts.* ~CV
+
+      # Done!
+      - echo
+      - echo *** SUCCESS ***
 
     # Outputs from the build are defined in artifacts
     # These are a list of artifacts to report directories or files.
@@ -30,4 +90,4 @@ jobs:
     artifacts:
       # Each element of the artifacts should have a path key, which gives the file or
       # directory to return.
-      - path: rm32
+      - path: Artifacts
